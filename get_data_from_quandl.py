@@ -11,5 +11,14 @@ import json
 import csv
 import Quandl
 
-# some simple setup
-apiKey = config.apiKey  # get the api key from config
+# get the api key from config
+apiKey = config.apiKey
+
+# parse the neighborhood codes csv
+with open('hood_codes.csv', 'rb') as csvfile:
+    hoodreader = csv.reader(csvfile, delimiter=',')
+    for row in hoodreader:
+        if row[1] == 'New York' and row[3] == 'New York':
+            neighborhood = row[0]
+            hood_code = row[-1].split("|")[1]
+            print ( neighborhood + ': ' + hood_code)

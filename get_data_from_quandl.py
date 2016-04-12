@@ -5,16 +5,17 @@
 #   + creates Flask app, and a REST API to poll
 
 # libraries and tings
+from pymongo import MongoClient
 import Quandl as Q
+import numpy as np
+import datetime
 import config
-import redis
-import json
-import time
 import csv
 import sys
 
-# connect the redis store
-store = redis.Redis(db=0)
+# connect & config the mongo store
+client = MongoClient()
+db = client['housing']
 
 # create array for list of hoods
 listOfHoods = []
@@ -27,7 +28,7 @@ with open('hood_codes.csv', 'rb') as csvfile:
     hoodreader = csv.reader(csvfile, delimiter=',')
     # for each row in the csv, get the hood & code
     for row in hoodreader:
-        # only get NYC neighborhoods
+        # only get NYC ameighborhoods
         if row[1] == 'New York' and row[3] == 'New York':
             # add the neighborhood to listOfHoods
             neighborhood = row[0]
@@ -36,9 +37,9 @@ with open('hood_codes.csv', 'rb') as csvfile:
 
             # ping the Quandl api
             # https://www.quandl.com/data/ZILL/documentation/documentation
-            #quandlQuery = ('ZILL/N'+ hoodCode + '_A')
-            #data = Q.get(quandlQuery, authtoken=apiKey)
-            #data.head()
-
-            # add the pair to a redis store
-            store.set(neighborhood, hoodCode)
+            quandlQuery = ('ZILL/N'+ hoodCode + '_A')
+            data = Q.get(quandlQuery, authtoken = apiKey, \
+                returns='numpy')
+            print (data)
+            sys.stdout.flush()
+            break  # do this for one neighborhood

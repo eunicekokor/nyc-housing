@@ -18,4 +18,10 @@ Note: First make sure you have the following Python libraries installed. Run:
 2. Put the API key from Quandl into config.py
 
 	`echo apiKey = "YOUR_API_KEY" > config.py`
-	
+
+
+### TODO
+
++ Use TinyDB
++ Use a visualization lib [vega, Seaborn, folium]
++ Write query python scripts and tie together w/ a shell script.

@@ -21,20 +21,36 @@ store = client['housing']
 # create an array of the neighborhood names
 hoodList = store.collection_names()
 
+# create a dict of years for each neighborhood
+arrayOfHoods = []
+
 # iterate through each neighborhood and get all data for 2010->2015
 for hood in hoodList:
 
     dataPoints = store.get_collection(hood).find({"year": {"$gt": 2009}})
 
-    # create a dict of years for each neighborhood
-    dictOfYears = {}
+    # create a temp obj.
+    temp = {}
+    temp["data"] = []
+    temp["neighborhood"] = hood
 
-    # for each datapoint, group by year
+    # for each datapoint, add tuple to hood data
     for datapoint in dataPoints:
-        # add the year to dict. of years
-        print ( datapoint )
-        break # just do one data point in the neighborhood
-    break # do this once
+
+        date = datapoint["date"]
+        price = datapoint["price"]
+
+        temp["data"].append( (date, price) )
+        #break # just do one data point in the neighborhood
+
+    arrayOfHoods.append( temp )
+
+    #break # do this for one neighborhood
+for h in arrayOfHoods:
+    print h["data"]
+    break
+
+
 
 # DATA STRUCT
 #data_point = {

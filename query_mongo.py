@@ -13,26 +13,43 @@
 
 # libraries and tings
 from pymongo import MongoClient
-from datetime import datetime
-import sys
 
 # connect & config the mongo store
 client = MongoClient()
-db = client['housing']
+store = client['housing']
 
 # create an array of the neighborhood names
-hoodList = db.collection_names()
+hoodList = store.collection_names()
 
-# iterate through each neighborhood and get all data
+# iterate through each neighborhood and get all data for 2010->2015
 for hood in hoodList:
-    print ( db.get_collection( hood ).find_one() )
-    break; # do this once
+
+    dataPoints = store.get_collection(hood).find({"year": {"$gt": 2009}})
+
+    # create a dict of years for each neighborhood
+    dictOfYears = {}
+
+    # for each datapoint, group by year
+    for datapoint in dataPoints:
+        # add the year to dict. of years
+        print ( datapoint )
+        break # just do one data point in the neighborhood
+    break # do this once
 
 # DATA STRUCT
-#data_point = collection.insert_one({
+#data_point = {
 #    "neighborhood": neighborhood,
 #    "date" : date,
 #    "year" : date.year,
 #    "month": date.month,
 #    "price": price,
-#})
+#}
+
+# NEW DATA STRUCT
+#data_point = {
+#   "neighborhood": neighborhood,
+#    "data": [
+#       {"2010":year, "avgPrice":price},
+#       {"2011":year, "avgPrice":price},
+#    ]
+#}

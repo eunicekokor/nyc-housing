@@ -1,8 +1,4 @@
 # 'query_mongo.py'
-#
-# TO DO
-#   + order in list and get top 40%.
-#   + make visualisation [optional]
 
 # libraries and tings
 from pymongo import MongoClient
@@ -13,12 +9,18 @@ import sys
 client = MongoClient()
 store  = client['housing']
 
-# create collections for each interval of desired data
-three  = store['threemonths']
-six    = store['sixmonths']
-one    = store['oneyear']
-two    = store['twoyears']
+# use 2nd argument as param
+param = int (sys.argv[1])
 
+# create collections for the interval of desired data
+if ( param == 3 ):
+    collection = store['threemonths']
+elif ( param == 6 ):
+    collection = store['sixmonths']
+elif ( param == 12 ):
+    collection = store['oneyear']
+elif ( param == 24 ):
+    collection = store['twoyears']
 
 # create an array of the neighborhood names
 hoodList = store.collection_names()
@@ -47,13 +49,20 @@ for hood in hoodList:
     # append the temp nhood obj to the glbl array
     arrayOfHoods.append( temp )
 
-def calcInterval():
+# clean garbage values in array
+for item in arrayOfHoods:
+    if len(item["data"]) < 1:
+        arrayOfHoods.remove( item )
+
+
+def calcGentrInterval( arg ):
     """calculations for a given interval:
         + 3 month (3)
         + 6 month (6)
         + 1 year  (12)
         + 2 years (24)"""
-
+    # check the interval passed in
+    interval  = arg
     arr = []
 
     for h in arrayOfHoods:
@@ -64,79 +73,39 @@ def calcInterval():
         temp["data"] = []
 
         # calculate data for that interval and place back in arr
-        for d in range(0, len(data)-3, 3):
+        for d in range(0, len(data)-interval, interval):
             data1 = data[d]  # start date
-            data2 = data[d+3] # end end
+            data2 = data[d + interval] # end end
             delta_price =  data2[1]-data1[1]
             temp["data"].append( (data1[0],data2[0],delta_price) )
 
         arr.append ( temp )
 
-    # clean up arr [weird garbage value from mongo]
-    for item in arr:
-        if len(item["data"]) < 1:
-            arr.remove( item )
-
     # get the size of one element's data in arr
     size = len( arr[0]["data"] )
+    print (size)
 
-    fortyPer = []
-    for i in range(0, size):
+    top33 = []
+    for i in range(0, size-1):
 
         # get the ith elem. for each hood
         for h in arr:
             name = h["neighborhood"]
             price = h["data"][i][2]
 
-            fortyPer.append ( (name,price) )
+            top33.append ( (name,price) )
 
-        # calculate top 40th percentile (60th percentile)
-        sortedArr = sorted(fortyPer, key=lambda x: x[1])
-        count = len( sortedArr )
-        index = int( round( 0.60 * count ) )
+        # calculate top 33rd percentile (67th percentile)
+        sortedArr = sorted(top33, key=lambda x: x[1])
+        index = int( round( 0.67 * len( sortedArr ) ) )
         for j in range(index, len(sortedArr)):
-            print sortedArr[j][0]
-        
-        break
-            # put the first tuple in arr
-            # calculate 40th percentile. put those objects in output array
-            #   + sort by keys (ascending)
-            #   + calculate
-            #   return
-            # repeat
+            #break
+            print sortedArr[j] # nams of sorted Arr
 
+        #clear the array and repeat
+        del top33[:]
 
-calcInterval()
+        #break # do this for one interval
 
-# calculations for 6-month period
-#for h in arrayOfHoods:
-#    data = h["data"]
-#    for d in range(0, len(data)-6, 6):
-#        data1 = data[d]  # start
-#        data2 = data[d+6] # end
-#        delta_price =  data2[1]-data1[1]
-#        print h["neighborhood"],data1[0],data2[0],delta_price
-#    break
-
-
-# calculations for 1 year period
-#for h in arrayOfHoods:
-#    data = h["data"]
-#    for d in range(0, len(data)-12, 12):
-#        data1 = data[d]  # start
-#        data2 = data[d+12] # end
-#        delta_price =  data2[1]-data1[1]
-#        print h["neighborhood"],data1[0],data2[0],delta_price
-#    break
-
-
-# calculations for 2 year period
-#for h in arrayOfHoods:
-#    data = h["data"]
-#    for d in range(0, len(data)-24, 24):
-#        data1 = data[d]  # start
-#        data2 = data[d+24] # end
-#        delta_price =  data2[1]-data1[1]
-#        print h["neighborhood"],data1[0],data2[0],delta_price
-#    break
-
+# call the function w/ param
+calcGentrInterval( param )

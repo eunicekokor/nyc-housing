@@ -13,10 +13,13 @@
 
 # libraries and tings
 from pymongo import MongoClient
+import datetime
 
 # connect & config the mongo store
 client = MongoClient()
 store = client['housing']
+
+# create a mongo storee for each interval
 
 # create an array of the neighborhood names
 hoodList = store.collection_names()
@@ -41,31 +44,50 @@ for hood in hoodList:
         price = datapoint["price"]
 
         temp["data"].append( (date, price) )
-        #break # just do one data point in the neighborhood
 
+    # append the temp nhood obj to the glbl array
     arrayOfHoods.append( temp )
 
-    #break # do this for one neighborhood
+# calculations for 3-month period
 for h in arrayOfHoods:
-    print h["data"]
+    data = h["data"]
+    for d in range(0, len(data)-3, 3):
+        data1 = data[d]  # start
+        data2 = data[d+3] # end
+        delta_price =  data2[1]-data1[1]
+        print h["neighborhood"],data1[0],data2[0],delta_price
     break
 
 
+# calculations for 6-month period
+for h in arrayOfHoods:
+    data = h["data"]
+    for d in range(0, len(data)-6, 6):
+        data1 = data[d]  # start
+        data2 = data[d+6] # end
+        delta_price =  data2[1]-data1[1]
+        print h["neighborhood"],data1[0],data2[0],delta_price
+    break
 
-# DATA STRUCT
-#data_point = {
-#    "neighborhood": neighborhood,
-#    "date" : date,
-#    "year" : date.year,
-#    "month": date.month,
-#    "price": price,
-#}
 
-# NEW DATA STRUCT
-#data_point = {
-#   "neighborhood": neighborhood,
-#    "data": [
-#       {"2010":year, "avgPrice":price},
-#       {"2011":year, "avgPrice":price},
-#    ]
-#}
+# calculations for 1 year period
+for h in arrayOfHoods:
+    data = h["data"]
+    for d in range(0, len(data)-12, 12):
+        data1 = data[d]  # start
+        data2 = data[d+12] # end
+        delta_price =  data2[1]-data1[1]
+        print h["neighborhood"],data1[0],data2[0],delta_price
+    break
+
+
+# calculations for 2 year period
+for h in arrayOfHoods:
+    data = h["data"]
+    for d in range(0, len(data)-24, 24):
+        data1 = data[d]  # start
+        data2 = data[d+24] # end
+        delta_price =  data2[1]-data1[1]
+        print h["neighborhood"],data1[0],data2[0],delta_price
+    break
+

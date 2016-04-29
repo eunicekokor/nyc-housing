@@ -9,19 +9,6 @@ import sys
 client = MongoClient()
 store  = client['housing']
 
-# use 2nd argument as param
-param = int (sys.argv[1])
-
-# create collections for the interval of desired data
-if ( param == 3 ):
-    collection = store['threemonths']
-elif ( param == 6 ):
-    collection = store['sixmonths']
-elif ( param == 12 ):
-    collection = store['oneyear']
-elif ( param == 24 ):
-    collection = store['twoyears']
-
 # create an array of the neighborhood names
 hoodList = store.collection_names()
 
@@ -61,10 +48,20 @@ def calcGentrInterval( arg ):
         + 6 month (6)
         + 1 year  (12)
         + 2 years (24)"""
-    # check the interval passed in
-    interval  = arg
+    # create collections for the interval of desired data
+    if ( arg == 3 ):
+        collection = store['threemonths']
+    elif ( arg == 6 ):
+        collection = store['sixmonths']
+    elif ( arg == 12 ):
+        collection = store['oneyear']
+    elif ( arg  == 24 ):
+        collection = store['twoyears']
+
+    interval = arg
     arr = []
 
+    # calc the change over this interval
     for h in arrayOfHoods:
         temp = {}
 
@@ -76,36 +73,70 @@ def calcGentrInterval( arg ):
         for d in range(0, len(data)-interval, interval):
             data1 = data[d]  # start date
             data2 = data[d + interval] # end end
-            delta_price =  data2[1]-data1[1]
-            temp["data"].append( (data1[0],data2[0],delta_price) )
+            percentChange =  ((data2[1]-data1[1]) / data1[1])
+            price = data1[1] # start price
+            temp["data"].append( (data1[0],data2[0],percentChange, price) )
 
         arr.append ( temp )
 
+
     # get the size of one element's data in arr
     size = len( arr[0]["data"] )
-    print (size)
 
-    top33 = []
+    filterSet = []
     for i in range(0, size-1):
 
         # get the ith elem. for each hood
         for h in arr:
-            name = h["neighborhood"]
-            price = h["data"][i][2]
+            try:  # ignore garbage data
+                name = h["neighborhood"]
+                percent = h["data"][i][2]
+                start = h["data"][i][0]
+                end = h["data"][i][1]
+                startprice = h["data"][i][3]
+            except IndexError:
+                continue
 
-            top33.append ( (name,price) )
+            filterSet.append ( (name, percent, start, end, startprice) )
+
+        # using filterSet, calculate bottom 40th percent -> top33
+        bottom40 = sorted(filterSet, key=lambda x: x[4])
+        threshold = int( round ( 0.50 * len(filterSet) ))
+        start_prices = [(x[0], x[-1]) for x in bottom40]
+
+
+        top33 = []
+        for i in range(0, threshold):
+            top33.append( bottom40[i] )
 
         # calculate top 33rd percentile (67th percentile)
         sortedArr = sorted(top33, key=lambda x: x[1])
         index = int( round( 0.67 * len( sortedArr ) ) )
         for j in range(index, len(sortedArr)):
-            #break
-            print sortedArr[j] # nams of sorted Arr
+            name = sortedArr[j][0]
+            percChange = sortedArr[j][1]
+            startdate = sortedArr[j][2]
+            enddate = sortedArr[j][3]
+            # insert into appr. mongo collection
+            data_point = collection.insert_one(
+            {
+                "name": name,
+                "percent": percChange,
+                "start": startdate,
+                "end": enddate,
+            })
+            print "name: " + name
+            print "startdate: " + str(startdate)
+            print "Object Added."
 
-        #clear the array and repeat
+        #clear the arrays and repeat
         del top33[:]
+        del filterSet[:]
 
         #break # do this for one interval
 
 # call the function w/ param
-calcGentrInterval( param )
+calcGentrInterval( 3 )
+calcGentrInterval( 6 )
+calcGentrInterval( 12 )
+calcGentrInterval( 24 )
